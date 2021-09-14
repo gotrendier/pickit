@@ -1,0 +1,11 @@
+.AppleDouble
+.DS_Store
+.idea/
+.LSOverride
+cache
+composer.phar
+Desktop.ini
+Thumbs.db
+vendor/
+/composer.lock
+test.php

@@ -1,0 +1,17 @@
+{
+  "name": "gotrendier/pickit-php-sdk",
+  "description": "PHP SDK for PickIt.net services",
+  "license": "MIT",
+  "require-dev": {
+    "phpunit/phpunit": "9.5.*",
+    "tetreum/perfect-print": "dev-master"
+  },
+  "require": {
+    "ext-curl": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "PickIt\\": "src/"
+    }
+  }
+}
