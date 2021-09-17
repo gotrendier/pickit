@@ -1,5 +1,6 @@
 # PickIt PHP SDK
-PHP SDK for PickIt.net services
+PHP SDK for PickIt.net services.
+Based on https://dev.pickit.net/
 
 ## Install
 
@@ -7,7 +8,7 @@ PHP SDK for PickIt.net services
 
 ## Requirements
 
-- >= PHP 7.4
+- `>= PHP 7.4`
 - CURL
 
 ## Usage

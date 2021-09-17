@@ -9,6 +9,25 @@ use PickIt\Responses\RawResponse;
 
 class PickIt
 {
+    public const SERVICE_TYPE_STORE_PICKUP = 'SP';
+    public const SERVICE_TYPE_PICKIT_POINT = 'PP';
+    public const SERVICE_TYPE_LOCKER = 'PL';
+    public const SERVICE_TYPE_STOCK = 'ST';
+
+    public const WORKFLOW_TAG = 'dispatch';
+    public const WORKFLOW_REFUND = 'refund';
+    public const WORKFLOW_RESTOCKING = 'restocking';
+
+    public const OPERATION_TYPE_TO_POINT = 1;
+    public const OPERATION_TYPE_TO_HOME = 2;
+    public const OPERATION_TYPE_TO_RETAILER = 3;
+
+    public const SLA_STANDARD = 1;
+    public const SLA_EXPRESS = 2;
+    public const SLA_PRIORITY = 3;
+    public const SLA_AGREED_WITH_CLIENT = 4;
+    public const SLA_WAREHOUSE = 5;
+
     private const METHOD_GET = 'get';
     private const METHOD_POST = 'post';
     private const METHOD_PUT = 'put';
