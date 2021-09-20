@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt;
 
-use \InvalidArgumentException;
+use InvalidArgumentException;
+use PickIt\Requests\SimplifiedTransactionRequest;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
 use PickIt\Responses\RawResponse;
@@ -27,6 +30,12 @@ class PickIt
     public const SLA_PRIORITY = 3;
     public const SLA_AGREED_WITH_CLIENT = 4;
     public const SLA_WAREHOUSE = 5;
+
+    public const START_TYPE_RETAILER = 1;
+    public const START_TYPE_AVAILABLE_FOR_COLLECTION = 2;
+    public const START_TYPE_COURIER = 3;
+    public const START_TYPE_REQUESTED_DEVOLUTION = 4;
+    public const START_TYPE_PROGRAMMED_DEVOLUTION = 5;
 
     private const METHOD_GET = 'get';
     private const METHOD_POST = 'post';
@@ -54,7 +63,8 @@ class PickIt
 
     private array $lastRequestHeaders = [];
 
-    public function __construct (string $apiKey, string $token, string $country, bool $sandBox = true) {
+    public function __construct(string $apiKey, string $token, string $country, bool $sandBox = true)
+    {
 
         if (!in_array($country, array_keys(self::COUNTRY_DOMAINS))) {
             throw new InvalidArgumentException("Invalid country");
@@ -68,14 +78,16 @@ class PickIt
         $this->domain = $this->buildDomain();
     }
 
-    private function buildDomain () : string {
+    private function buildDomain(): string
+    {
         $url = $this->sandBox ? self::API_SANDBOX_HOST : self::API_HOST;
         $url .= self::COUNTRY_DOMAINS[$this->country];
 
         return $url;
     }
 
-    public function getLabel (int $transactionId) : ?GetLabelResponse {
+    public function getLabel(int $transactionId): ?GetLabelResponse
+    {
         $response = $this->query('/apiV2/transaction/' . $transactionId . '/label', self::METHOD_GET);
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
@@ -85,7 +97,31 @@ class PickIt
         return new GetLabelResponse($response);
     }
 
-    public function getMapPoint (int $page, int $limit) : ?GetMapPointResponse {
+    public function createSimplifiedTransaction(SimplifiedTransactionRequest $request)
+    {
+        $this->validateSimplifiedTransactionRequest($request);
+
+        $response = $this->query('/apiV2/transaction', self::METHOD_POST);
+    }
+
+    private function validateSimplifiedTransactionRequest(SimplifiedTransactionRequest $request): void
+    {
+        $requiredFields = [
+            "serviceType" => $request->getServiceType(),
+            "workflowTag" => $request->getWorkflowTag(),
+            "products" => $request->getProducts(),
+            "sla" => $request->getSlaId(),
+        ];
+
+        foreach ($requiredFields as $fieldName => $value) {
+            if (empty($value)) {
+                throw new InvalidArgumentException($fieldName . " is empty");
+            }
+        }
+    }
+
+    public function getMapPoint(int $page, int $limit): ?GetMapPointResponse
+    {
         $response = $this->query('/apiV2/map/point', self::METHOD_GET, [
             "page" => $page,
             "perPage" => $limit,
@@ -99,7 +135,8 @@ class PickIt
         return new GetMapPointResponse($response);
     }
 
-    private function query (string $path, string $method, array $data = [], array $headers = []) : ?RawResponse {
+    private function query(string $path, string $method, array $data = [], array $headers = []): ?RawResponse
+    {
         $headers = array_merge($headers, [
             "Content-Type" => "application/json",
             "apiKey" => $this->apiKey,
@@ -118,7 +155,7 @@ class PickIt
      * @return mixed
      * @throws \Exception if received url is invalid
      */
-    private function curl(string $url, string $method = "get", array $data = [], array $headers = []) : RawResponse
+    private function curl(string $url, string $method = "get", array $data = [], array $headers = []): RawResponse
     {
         if (!filter_var($url, FILTER_VALIDATE_URL)) {
             throw new \Exception("Invalid URL received: " . $url);

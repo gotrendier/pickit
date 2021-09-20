@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Entities;
 
 class Person
@@ -11,7 +13,8 @@ class Person
     private string $phone;
     private Address $address;
 
-    public function __construct (string $response, array $headers) {
+    public function __construct(string $response, array $headers)
+    {
         $this->response = $response;
         $this->headers = $headers;
     }

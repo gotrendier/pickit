@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Responses;
 
 use PickIt\Entities\MapPoint;
@@ -44,7 +46,8 @@ class GetMapPointResponse extends RawResponse
         }
     }
 
-    public function getPaginator () : ?Paginator {
+    public function getPaginator(): ?Paginator
+    {
         return $this->paginator;
     }
 
