@@ -10,7 +10,7 @@ class GetMapPointResponse extends RawResponse
     /**
      * @var MapPoint[]
      */
-    private array $points;
+    private array $points = [];
     private ?Paginator $paginator = null;
 
     public function __construct(RawResponse $rawResponse)
