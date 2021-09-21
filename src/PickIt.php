@@ -9,6 +9,7 @@ use PickIt\Requests\SimplifiedTransactionRequest;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
 use PickIt\Responses\RawResponse;
+use PickIt\Responses\StartTransactionResponse;
 
 class PickIt
 {
@@ -86,6 +87,11 @@ class PickIt
         return $url;
     }
 
+    /**
+     * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/transaction/{transactionId}/label
+     * @param int $transactionId
+     * @return GetLabelResponse|null
+     */
     public function getLabel(int $transactionId): ?GetLabelResponse
     {
         $response = $this->query('/apiV2/transaction/' . $transactionId . '/label', self::METHOD_GET);
@@ -97,11 +103,22 @@ class PickIt
         return new GetLabelResponse($response);
     }
 
-    public function createSimplifiedTransaction(SimplifiedTransactionRequest $request)
+    /**
+     * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/transaction
+     * @param SimplifiedTransactionRequest $request
+     * @return StartTransactionResponse|null
+     */
+    public function createSimplifiedTransaction(SimplifiedTransactionRequest $request): ?StartTransactionResponse
     {
         $this->validateSimplifiedTransactionRequest($request);
 
         $response = $this->query('/apiV2/transaction', self::METHOD_POST);
+
+        if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
+            return null;
+        }
+
+        return new StartTransactionResponse($response);
     }
 
     private function validateSimplifiedTransactionRequest(SimplifiedTransactionRequest $request): void
@@ -111,7 +128,19 @@ class PickIt
             "workflowTag" => $request->getWorkflowTag(),
             "products" => $request->getProducts(),
             "sla" => $request->getSlaId(),
+            "customer" => $request->getCustomer(),
+            "firstState" => $request->getFirstState(),
         ];
+
+        if (
+            in_array($request->getFirstState(), [
+            self::START_TYPE_REQUESTED_DEVOLUTION,
+            self::START_TYPE_PROGRAMMED_DEVOLUTION,
+            ])
+        ) {
+            $requiredFields["deliveryTimeRangeStart"] = $request->getStartTime();
+            $requiredFields["deliveryTimeRangeEnd"] = $request->getEndTime();
+        }
 
         foreach ($requiredFields as $fieldName => $value) {
             if (empty($value)) {
@@ -120,6 +149,12 @@ class PickIt
         }
     }
 
+    /**
+     * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/map/point?page={page_number}&perPage={results_per_page}
+     * @param int $page
+     * @param int $limit
+     * @return GetMapPointResponse|null
+     */
     public function getMapPoint(int $page, int $limit): ?GetMapPointResponse
     {
         $response = $this->query('/apiV2/map/point', self::METHOD_GET, [
