@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PickIt\Entities;
 
-class Person
+class Person implements \JsonSerializable
 {
     private string $name;
     private string $lastName;
@@ -89,5 +89,25 @@ class Person
     {
         $this->address = $address;
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        $fields = [
+            "name" => $this->getName(),
+            "lastName" => $this->getLastName(),
+            "pid" => $this->getPid(),
+            "email" => $this->getEmail(),
+        ];
+
+        if (!empty($this->getPhone())) {
+            $fields["phone"] = $this->getPhone();
+        }
+
+        if (!empty($this->getAddress())) {
+            $fields["address"] = $this->getAddress();
+        }
+
+        return $fields;
     }
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PickIt;
 
 use InvalidArgumentException;
+use PickIt\Entities\Product;
 use PickIt\Requests\SimplifiedTransactionRequest;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
@@ -18,7 +19,7 @@ class PickIt
     public const SERVICE_TYPE_LOCKER = 'PL';
     public const SERVICE_TYPE_STOCK = 'ST';
 
-    public const WORKFLOW_TAG = 'dispatch';
+    public const WORKFLOW_DISPATCH = 'dispatch';
     public const WORKFLOW_REFUND = 'refund';
     public const WORKFLOW_RESTOCKING = 'restocking';
 
@@ -145,6 +146,12 @@ class PickIt
         foreach ($requiredFields as $fieldName => $value) {
             if (empty($value)) {
                 throw new InvalidArgumentException($fieldName . " is empty");
+            }
+        }
+
+        foreach ($request->getProducts() as $product) {
+            if (!($product instanceof Product)) {
+                throw new InvalidArgumentException("Products field must be a list of Product entities");
             }
         }
     }

@@ -6,22 +6,29 @@ namespace PickIt\Entities;
 
 class Address
 {
-    private string $postCode;
+    private string $postalCode;
     private string $address;
     private string $city;
     private string $province;
 
-    public function __construct(array $response)
-    {
-        $this->postCode = $response["postalCode"];
-        $this->address = $response["address"];
-        $this->city = $response["city"];
-        $this->province = $response["province"];
+    public function __construct(
+        string $postalCode,
+        string $address,
+        string $city
+    ) {
+        $this->postalCode = $postalCode;
+        $this->address = $address;
+        $this->city = $city;
     }
 
-    public function getPostCode(): string
+    public function setProvince(string $province)
     {
-        return $this->postCode;
+        $this->province = $province;
+    }
+
+    public function getPostalCode(): string
+    {
+        return $this->postalCode;
     }
 
     public function getAddress(): string
@@ -37,5 +44,20 @@ class Address
     public function getProvince(): string
     {
         return $this->province;
+    }
+
+    public function jsonSerialize(): array
+    {
+        $fields = [
+            "postalCode" => $this->getPostalCode(),
+            "address" => $this->getAddress(),
+            "city" => $this->getCity(),
+        ];
+
+        if (!empty($this->getProvince())) {
+            $fields["province"] = $this->getProvince();
+        }
+
+        return $fields;
     }
 }

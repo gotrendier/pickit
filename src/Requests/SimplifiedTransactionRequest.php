@@ -7,7 +7,7 @@ namespace PickIt\Requests;
 use PickIt\Entities\Address;
 use PickIt\Entities\Person;
 
-class SimplifiedTransactionRequest
+class SimplifiedTransactionRequest implements \JsonSerializable
 {
     private ?string $observations = null;
     private ?int $pointId = null;
@@ -28,7 +28,6 @@ class SimplifiedTransactionRequest
         string $workflowTag,
         string $operationType,
         array $products,
-        Address $retailerAlternativeAddress,
         int $slaId,
         Person $customer,
         string $firstState
@@ -37,10 +36,16 @@ class SimplifiedTransactionRequest
         $this->workflowTag = $workflowTag;
         $this->operationType = $operationType;
         $this->products = $products;
-        $this->retailerAlternativeAddress = $retailerAlternativeAddress;
+
         $this->slaId = $slaId;
         $this->customer = $customer;
         $this->firstState = $firstState;
+    }
+
+    public function setRetailerAlternativeAddress(Address $retailerAlternativeAddress): self
+    {
+        $this->retailerAlternativeAddress = $retailerAlternativeAddress;
+        return $this;
     }
 
     public function setDeliveryTimeRange(\DateTime $startTime, \DateTime $endTime): self
@@ -131,5 +136,49 @@ class SimplifiedTransactionRequest
     public function getFirstState(): string
     {
         return $this->firstState;
+    }
+
+    public function getTokenId(): string
+    {
+        return $this->tokenId;
+    }
+
+    public function jsonSerialize(): array
+    {
+        $fields = [
+            "serviceType" => $this->getServiceType(),
+            "workflowTag" => $this->getWorkflowTag(),
+            "operationType" => $this->getOperationType(),
+            "retailer" => [
+                "tokenId" => $this->getTokenId()
+            ],
+            "products" => $this->getProducts(),
+            "sla" => [
+                "id" => $this->getSlaId()
+            ],
+            "customer" => $this->getCustomer(),
+            "pointId" => $this->getPointId(),
+            "firstState" => $this->getFirstState(),
+            "packageAmount" => $this->getPackageAmount(),
+            "deliveryTimeRange" => $this->getPackageAmount(),
+        ];
+
+        if (!empty($this->getRetailerAlternativeAddress())) {
+            $fields["retailerAlternativeAddress"] = $this->getRetailerAlternativeAddress();
+        }
+        if (!empty($this->getStartTime())) {
+            $fields["deliveryTimeRange"] = [
+                "start" => $this->getStartTime(),
+                "end" => $this->getEndTime(),
+            ];
+        }
+        if (!empty($this->getObservations())) {
+            $fields["refundProbableCause"] = $this->getRe();
+        }
+        if (!empty($this->getObservations())) {
+            $fields["observations"] = $this->getObservations();
+        }
+
+        return $fields;
     }
 }
