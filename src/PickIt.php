@@ -9,6 +9,7 @@ use PickIt\Entities\Product;
 use PickIt\Requests\BudgetPetitionRequest;
 use PickIt\Requests\SimplifiedTransactionRequest;
 use PickIt\Requests\TransactionRequest;
+use PickIt\Responses\CreateBudgetResponse;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
 use PickIt\Responses\RawResponse;
@@ -106,6 +107,43 @@ class PickIt
         return new GetLabelResponse($response);
     }
 
+    public function createTransaction(string $uuid, TransactionRequest $request)
+    {
+        $this->validateTransactionRequest($request);
+
+        if (empty($uuid)) {
+            throw new InvalidArgumentException("uuid is empty");
+        }
+
+        $response = $this->query('/apiV2/transaction/' . $uuid, self::METHOD_POST, $request->jsonSerialize());
+
+        if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
+            return null;
+        }
+
+        return new CreateBudgetResponse($response);
+    }
+
+    /**
+     * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/budget
+     * @param BudgetPetitionRequest $request
+     * @return CreateBudgetResponse|null
+     */
+    public function createBudget(BudgetPetitionRequest $request): ?CreateBudgetResponse
+    {
+        $request->setTokenId($this->token);
+
+        $this->validateBudgetPetitionRequest($request);
+
+        $response = $this->query('/apiV2/budget', self::METHOD_POST, $request->jsonSerialize());
+
+        if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
+            return null;
+        }
+
+        return new CreateBudgetResponse($response);
+    }
+
     /**
      * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/transaction
      * @param SimplifiedTransactionRequest $request
@@ -154,6 +192,13 @@ class PickIt
                 throw new InvalidArgumentException("Products field must be a list of Product entities");
             }
         }
+
+        if (
+            $request->getOperationType() == self::OPERATION_TYPE_TO_HOME &&
+            empty($request->getCustomer()->getAddress())
+        ) {
+            throw new InvalidArgumentException("Customer address is required when delivering home");
+        }
     }
 
     private function validateTransactionRequest(TransactionRequest $request): void
@@ -162,14 +207,15 @@ class PickIt
             "firstState" => $request->getFirstState(),
         ];
 
-        if (
-            in_array($request->getFirstState(), [
-                self::START_TYPE_REQUESTED_DEVOLUTION,
-                self::START_TYPE_PROGRAMMED_DEVOLUTION,
-            ])
-        ) {
-            $requiredFields["deliveryTimeRangeStart"] = $request->getStartTime();
-            $requiredFields["deliveryTimeRangeEnd"] = $request->getEndTime();
+        switch ($request->getFirstState()) {
+            case self::START_TYPE_REQUESTED_DEVOLUTION:
+            case self::START_TYPE_PROGRAMMED_DEVOLUTION:
+                $requiredFields["deliveryTimeRangeStart"] = $request->getStartTime();
+                $requiredFields["deliveryTimeRangeEnd"] = $request->getEndTime();
+                break;
+            case self::START_TYPE_COURIER:
+                $requiredFields["shipmentTrackingCode"] = $request->getShipmentTrackingCode();
+                break;
         }
 
         $this->validateRequiredFields($requiredFields);

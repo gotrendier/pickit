@@ -14,11 +14,30 @@ class TransactionRequest implements \JsonSerializable
 
     private int $firstState;
     private ?string $refundProbableCause = null;
+    private ?string $shipmentTrackingCode = null;
+    private string $orderTrackingCode;
 
     public function __construct(
-        int $firstState
+        int $firstState,
+        string $orderTrackingCode
     ) {
         $this->firstState = $firstState;
+        $this->orderTrackingCode = $orderTrackingCode;
+    }
+
+    public function getOrderTrackingCode(): string
+    {
+        return $this->orderTrackingCode;
+    }
+
+    public function getShipmentTrackingCode(): ?string
+    {
+        return $this->shipmentTrackingCode;
+    }
+
+    public function setShipmentTrackingCode(?string $shipmentTrackingCode): void
+    {
+        $this->shipmentTrackingCode = $shipmentTrackingCode;
     }
 
     public function setDeliveryTimeRange(\DateTime $startTime, \DateTime $endTime): self
@@ -82,12 +101,19 @@ class TransactionRequest implements \JsonSerializable
         $fields = [
             "firstState" => $this->getFirstState(),
             "packageAmount" => $this->getPackageAmount(),
+            "trackingInfo" => [
+                "order" => $this->getOrderTrackingCode()
+            ],
         ];
+
+        if (!empty($this->getShipmentTrackingCode())) {
+            $fields["trackingInfo"]["shipment"] = $this->getShipmentTrackingCode();
+        }
 
         if (!empty($this->getStartTime())) {
             $fields["deliveryTimeRange"] = [
-                "start" => $this->getStartTime(),
-                "end" => $this->getEndTime(),
+                "start" => $this->getStartTime()->format("Y-m-d\TH:i:s\Z"),
+                "end" => $this->getEndTime()->format("Y-m-d\TH:i:s\Z"),
             ];
         }
         if (!empty($this->getRefundProbableCause())) {

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PickIt\Entities;
 
-class Address
+class Address implements \JsonSerializable
 {
     private string $postalCode;
     private string $address;
@@ -14,15 +14,12 @@ class Address
     public function __construct(
         string $postalCode,
         string $address,
-        string $city
+        string $city,
+        string $province
     ) {
         $this->postalCode = $postalCode;
         $this->address = $address;
         $this->city = $city;
-    }
-
-    public function setProvince(string $province)
-    {
         $this->province = $province;
     }
 
@@ -48,16 +45,11 @@ class Address
 
     public function jsonSerialize(): array
     {
-        $fields = [
+        return [
             "postalCode" => $this->getPostalCode(),
             "address" => $this->getAddress(),
             "city" => $this->getCity(),
+            "province" => $this->getProvince()
         ];
-
-        if (!empty($this->getProvince())) {
-            $fields["province"] = $this->getProvince();
-        }
-
-        return $fields;
     }
 }
