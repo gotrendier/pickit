@@ -10,8 +10,8 @@ class Person implements \JsonSerializable
     private string $lastName;
     private string $pid;
     private string $email;
-    private string $phone;
-    private Address $address;
+    private ?string $phone = null;
+    private ?Address $address = null;
 
     public function __construct(string $name, string $lastName)
     {
@@ -69,7 +69,7 @@ class Person implements \JsonSerializable
         return $this;
     }
 
-    public function getPhone(): string
+    public function getPhone(): ?string
     {
         return $this->phone;
     }
@@ -80,7 +80,7 @@ class Person implements \JsonSerializable
         return $this;
     }
 
-    public function getAddress(): Address
+    public function getAddress(): ?Address
     {
         return $this->address;
     }
@@ -96,9 +96,14 @@ class Person implements \JsonSerializable
         $fields = [
             "name" => $this->getName(),
             "lastName" => $this->getLastName(),
-            "pid" => $this->getPid(),
-            "email" => $this->getEmail(),
         ];
+
+        if (!empty($this->getPid())) {
+            $fields["pid"] = (int)$this->getPid(); // documentation talks about type string, but it explodes if it isn't an int
+        }
+        if (!empty($this->getEmail())) {
+            $fields["email"] = $this->getEmail();
+        }
 
         if (!empty($this->getPhone())) {
             $fields["phone"] = $this->getPhone();

@@ -6,7 +6,9 @@ namespace PickIt;
 
 use InvalidArgumentException;
 use PickIt\Entities\Product;
+use PickIt\Requests\BudgetPetitionRequest;
 use PickIt\Requests\SimplifiedTransactionRequest;
+use PickIt\Requests\TransactionRequest;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
 use PickIt\Responses\RawResponse;
@@ -111,10 +113,13 @@ class PickIt
      */
     public function createSimplifiedTransaction(SimplifiedTransactionRequest $request): ?StartTransactionResponse
     {
-        $this->validateSimplifiedTransactionRequest($request);
+        $request->getBudgetPetitionRequest()->setTokenId($this->token);
 
-        $response = $this->query('/apiV2/transaction', self::METHOD_POST);
-
+        $this->validateBudgetPetitionRequest($request->getBudgetPetitionRequest());
+        $this->validateTransactionRequest($request->getTransactionRequest());
+//pd(json_encode($request, JSON_PRETTY_PRINT));
+        $response = $this->query('/apiV2/transaction', self::METHOD_POST, $request->jsonSerialize());
+        pd($response->getRawResponse());
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }
@@ -122,7 +127,7 @@ class PickIt
         return new StartTransactionResponse($response);
     }
 
-    private function validateSimplifiedTransactionRequest(SimplifiedTransactionRequest $request): void
+    private function validateBudgetPetitionRequest(BudgetPetitionRequest $request): void
     {
         $requiredFields = [
             "serviceType" => $request->getServiceType(),
@@ -130,28 +135,51 @@ class PickIt
             "products" => $request->getProducts(),
             "sla" => $request->getSlaId(),
             "customer" => $request->getCustomer(),
+        ];
+
+        if (
+            in_array($request->getServiceType(), [
+            self::SERVICE_TYPE_PICKIT_POINT,
+            self::SERVICE_TYPE_LOCKER,
+            self::SERVICE_TYPE_STOCK,
+            ]) && empty($request->getPointId())
+        ) {
+            throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
+        }
+
+        $this->validateRequiredFields($requiredFields);
+
+        foreach ($request->getProducts() as $product) {
+            if (!($product instanceof Product)) {
+                throw new InvalidArgumentException("Products field must be a list of Product entities");
+            }
+        }
+    }
+
+    private function validateTransactionRequest(TransactionRequest $request): void
+    {
+        $requiredFields = [
             "firstState" => $request->getFirstState(),
         ];
 
         if (
             in_array($request->getFirstState(), [
-            self::START_TYPE_REQUESTED_DEVOLUTION,
-            self::START_TYPE_PROGRAMMED_DEVOLUTION,
+                self::START_TYPE_REQUESTED_DEVOLUTION,
+                self::START_TYPE_PROGRAMMED_DEVOLUTION,
             ])
         ) {
             $requiredFields["deliveryTimeRangeStart"] = $request->getStartTime();
             $requiredFields["deliveryTimeRangeEnd"] = $request->getEndTime();
         }
 
+        $this->validateRequiredFields($requiredFields);
+    }
+
+    private function validateRequiredFields(array $requiredFields): void
+    {
         foreach ($requiredFields as $fieldName => $value) {
             if (empty($value)) {
                 throw new InvalidArgumentException($fieldName . " is empty");
-            }
-        }
-
-        foreach ($request->getProducts() as $product) {
-            if (!($product instanceof Product)) {
-                throw new InvalidArgumentException("Products field must be a list of Product entities");
             }
         }
     }

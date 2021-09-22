@@ -13,7 +13,7 @@ class Product implements \JsonSerializable
     private Measure $length;
     private Measure $height;
     private Measure $width;
-    private ?float $price = null;
+    private float $price;
     private ?string $sku = null;
     private int $amount = 1;
 
@@ -22,7 +22,8 @@ class Product implements \JsonSerializable
         Measure $weight,
         Measure $length,
         Measure $height,
-        Measure $width
+        Measure $width,
+        float $price
     ) {
         if (!in_array($weight->getUnit(), Measure::WEIGHT_UNITS)) {
             throw new InvalidArgumentException("invalid weight unit received (" . $weight->getUnit() . ") for " . $name);
@@ -42,12 +43,7 @@ class Product implements \JsonSerializable
         $this->length = $length;
         $this->height = $height;
         $this->width = $width;
-    }
-
-    public function setPrice(float $price): self
-    {
         $this->price = $price;
-        return $this;
     }
 
     public function setSku(string $sku): self
@@ -111,11 +107,8 @@ class Product implements \JsonSerializable
             "height" => $this->getHeight(),
             "width" => $this->getWidth(),
             "amount" => $this->getAmount(),
+            "price" => $this->getPrice()
         ];
-
-        if (!empty($this->getPrice())) {
-            $fields["price"] = $this->getPrice();
-        }
 
         if (!empty($this->getSku())) {
             $fields["sku"] = $this->getSku();
