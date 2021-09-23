@@ -18,3 +18,8 @@ $pickIt = new \PickIt\PickIt('API_KEY', 'TOKEN', 'COUNTRY', $sandBox = true);
 
 $response = $pickIt->getMapPoint(1, 10);
 ```
+
+## Development
+
+1. `cp pre-commit.php .git/hooks/pre-commit`
+1. `chmod 775 .git/hooks/pre-commit`

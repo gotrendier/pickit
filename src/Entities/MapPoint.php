@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Entities;
 
 class MapPoint
@@ -15,16 +17,17 @@ class MapPoint
     private string $location;
     private string $province;
 
-    public function __construct (int $id,
-                                 int $idService,
-                                 string $name,
-                                 string $serviceType,
-                                 string $lat,
-                                 string $lon,
-                                 string $address,
-                                 string $postalCode,
-                                 string $location,
-                                 string $province
+    public function __construct(
+        int $id,
+        int $idService,
+        string $name,
+        string $serviceType,
+        float $lat,
+        float $lon,
+        string $address,
+        string $postalCode,
+        string $location,
+        string $province
     ) {
         $this->id = $id;
         $this->idService = $idService;

@@ -1,38 +1,55 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Entities;
 
-class Address
+class Address implements \JsonSerializable
 {
-    private string $postCode;
+    private string $postalCode;
     private string $address;
     private string $city;
     private string $province;
 
-    public function __construct (array $response) {
-        $this->postCode = $response["postalCode"];
-        $this->address = $response["address"];
-        $this->city = $response["city"];
-        $this->province = $response["province"];
+    public function __construct(
+        string $postalCode,
+        string $address,
+        string $city,
+        string $province
+    ) {
+        $this->postalCode = $postalCode;
+        $this->address = $address;
+        $this->city = $city;
+        $this->province = $province;
     }
 
-    public function getPostCode() : string
+    public function getPostalCode(): string
     {
-        return $this->postCode;
+        return $this->postalCode;
     }
 
-    public function getAddress() : string
+    public function getAddress(): string
     {
         return $this->address;
     }
 
-    public function getCity() : string
+    public function getCity(): string
     {
         return $this->city;
     }
 
-    public function getProvince() : string
+    public function getProvince(): string
     {
         return $this->province;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            "postalCode" => $this->getPostalCode(),
+            "address" => $this->getAddress(),
+            "city" => $this->getCity(),
+            "province" => $this->getProvince()
+        ];
     }
 }

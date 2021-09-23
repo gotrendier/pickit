@@ -1,15 +1,34 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Entities;
 
-class Measure {
+class Measure implements \JsonSerializable
+{
+    public const UNIT_KG = "kg";
+    public const UNIT_G = "g";
+    public const UNIT_CM = "cm";
+    public const UNIT_M = "m";
 
-    public const TYPE_WEIGHT = 1;
-    public const TYPE_LENGTH = 2;
+    public const WEIGHT_UNITS = [
+        self::UNIT_KG,
+        self::UNIT_G,
+    ];
+
+    public const LENGTH_UNITS = [
+        self::UNIT_CM,
+        self::UNIT_M,
+    ];
 
     private float $amount;
     private string $unit;
-    private int $type;
+
+    public function __construct(float $amount, string $unit)
+    {
+        $this->amount = $amount;
+        $this->unit = $unit;
+    }
 
     public function getAmount(): float
     {
@@ -21,8 +40,11 @@ class Measure {
         return $this->unit;
     }
 
-    public function getType(): int
+    public function jsonSerialize(): array
     {
-        return $this->type;
+        return [
+            "unit" => $this->getUnit(),
+            "amount" => $this->getAmount(),
+        ];
     }
 }

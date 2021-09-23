@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace PickIt\Entities;
 
 class Paginator
@@ -9,14 +11,16 @@ class Paginator
     private int $page;
     private int $totalPages;
 
-    public function __construct (int $total, int $perPage, int $page, $totalPages) {
+    public function __construct(int $total, int $perPage, int $page, $totalPages)
+    {
         $this->total = $total;
         $this->perPage = $perPage;
         $this->page = $page;
         $this->totalPages = $totalPages;
     }
 
-    public function getTotal () : int {
+    public function getTotal(): int
+    {
         return $this->total;
     }
 
