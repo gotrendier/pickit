@@ -21,8 +21,8 @@ class Product implements \JsonSerializable
         string $name,
         Measure $weight,
         Measure $length,
-        Measure $height,
         Measure $width,
+        Measure $height,
         float $price
     ) {
         if (!in_array($weight->getUnit(), Measure::WEIGHT_UNITS)) {
@@ -41,8 +41,8 @@ class Product implements \JsonSerializable
         $this->name = $name;
         $this->weight = $weight;
         $this->length = $length;
-        $this->height = $height;
         $this->width = $width;
+        $this->height = $height;
         $this->price = $price;
     }
 
