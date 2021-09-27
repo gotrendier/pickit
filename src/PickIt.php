@@ -78,7 +78,10 @@ class PickIt
     ];
 
     private const COUNTRY_DOMAINS = [
-        "ar" => 'com.ar',
+        "ar" => [ // just to make things a bit harder
+            "sandbox" => 'com.ar',
+            "production" => 'net',
+        ],
         "uy" => 'com.uy',
         "mx" => 'com.mx',
         "co" => 'com.co',
@@ -113,7 +116,7 @@ class PickIt
     private function buildDomain(): string
     {
         $url = $this->sandBox ? self::API_SANDBOX_HOST : self::API_HOST;
-        $url .= self::COUNTRY_DOMAINS[$this->country];
+        $url .= is_array(self::COUNTRY_DOMAINS[$this->country]) ? self::COUNTRY_DOMAINS[$this->country][$this->sandBox ? 'sandbox' : 'production'] : self::COUNTRY_DOMAINS[$this->country];
 
         return $url;
     }
