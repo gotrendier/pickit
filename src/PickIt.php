@@ -12,6 +12,7 @@ use PickIt\Requests\TransactionRequest;
 use PickIt\Responses\CreateBudgetResponse;
 use PickIt\Responses\GetLabelResponse;
 use PickIt\Responses\GetMapPointResponse;
+use PickIt\Responses\GetShipmentStatusResponse;
 use PickIt\Responses\RawResponse;
 use PickIt\Responses\StartTransactionResponse;
 
@@ -49,8 +50,38 @@ class PickIt
 
     private const HTTP_STATUS_OK = 200;
 
+    private const VALID_SERVICE_TYPES = [
+        self::SERVICE_TYPE_STORE_PICKUP,
+        self::SERVICE_TYPE_PICKIT_POINT,
+        self::SERVICE_TYPE_LOCKER,
+        self::SERVICE_TYPE_STOCK
+    ];
+
+    private const VALID_OPERATION_TYPES = [
+        self::OPERATION_TYPE_TO_POINT,
+        self::OPERATION_TYPE_TO_HOME,
+        self::OPERATION_TYPE_TO_RETAILER
+    ];
+
+    private const VALID_WORKFLOWS = [
+        self::WORKFLOW_DISPATCH,
+        self::WORKFLOW_REFUND,
+        self::WORKFLOW_RESTOCKING,
+    ];
+
+    private const VALID_SLAS = [
+        self::SLA_STANDARD,
+        self::SLA_EXPRESS,
+        self::SLA_PRIORITY,
+        self::SLA_AGREED_WITH_CLIENT,
+        self::SLA_WAREHOUSE
+    ];
+
     private const COUNTRY_DOMAINS = [
-        "ar" => 'com.ar',
+        "ar" => [ // just to make things a bit harder
+            "sandbox" => 'com.ar',
+            "production" => 'net',
+        ],
         "uy" => 'com.uy',
         "mx" => 'com.mx',
         "co" => 'com.co',
@@ -70,7 +101,6 @@ class PickIt
 
     public function __construct(string $apiKey, string $token, string $country, bool $sandBox = true)
     {
-
         if (!in_array($country, array_keys(self::COUNTRY_DOMAINS))) {
             throw new InvalidArgumentException("Invalid country");
         }
@@ -86,9 +116,19 @@ class PickIt
     private function buildDomain(): string
     {
         $url = $this->sandBox ? self::API_SANDBOX_HOST : self::API_HOST;
-        $url .= self::COUNTRY_DOMAINS[$this->country];
+        $url .= is_array(self::COUNTRY_DOMAINS[$this->country]) ? self::COUNTRY_DOMAINS[$this->country][$this->sandBox ? 'sandbox' : 'production'] : self::COUNTRY_DOMAINS[$this->country];
 
         return $url;
+    }
+
+    public function getShipmentStatus(string $trackingCode): ?GetShipmentStatusResponse
+    {
+        $response = $this->query('/publicApiV2/tracking/base/' . $trackingCode, self::METHOD_GET);
+
+        if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
+            return null;
+        }
+        return new GetShipmentStatusResponse($response);
     }
 
     /**
@@ -116,7 +156,7 @@ class PickIt
         }
 
         $response = $this->query('/apiV2/transaction/' . $uuid, self::METHOD_POST, $request->jsonSerialize());
-
+        pd($request, $response->getRawResponse());
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }
@@ -134,8 +174,8 @@ class PickIt
         $request->setTokenId($this->token);
 
         $this->validateBudgetPetitionRequest($request);
-
         $response = $this->query('/apiV2/budget', self::METHOD_POST, $request->jsonSerialize());
+        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
@@ -198,6 +238,22 @@ class PickIt
             empty($request->getCustomer()->getAddress())
         ) {
             throw new InvalidArgumentException("Customer address is required when delivering home");
+        }
+
+        if (!in_array($request->getOperationType(), self::VALID_OPERATION_TYPES)) {
+            throw new InvalidArgumentException("Invalid operationType received " . $request->getOperationType());
+        }
+
+        if (!in_array($request->getSlaId(), self::VALID_SLAS)) {
+            throw new InvalidArgumentException("Invalid SLA received " . $request->getSlaId());
+        }
+
+        if (!in_array($request->getWorkflowTag(), self::VALID_WORKFLOWS)) {
+            throw new InvalidArgumentException("Invalid workflow received " . $request->getWorkflowTag());
+        }
+
+        if (!in_array($request->getServiceType(), self::VALID_SERVICE_TYPES)) {
+            throw new InvalidArgumentException("Invalid serviceType received " . $request->getServiceType());
         }
     }
 
