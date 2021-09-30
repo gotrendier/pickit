@@ -45,7 +45,6 @@ final class BudgetTest extends TestCase
      */
     public function testThrowAnExceptionWhenOperationTypeIsToPointAndPointIsNotSet(array $products, Person $customer): void
     {
-
         $request = new BudgetPetitionRequest(
             PickItClient::SERVICE_TYPE_PICKIT_POINT,
             PickItClient::WORKFLOW_DISPATCH,
@@ -66,7 +65,6 @@ final class BudgetTest extends TestCase
      */
     public function testThrowAnExceptionWhenOperationTypeIsToHomeAndThereIsNoCustomerAddress(array $products, Person $customer): void
     {
-
         $customer = (new Person("Marta", "Fernandez"))
             ->setPid("345345")
             ->setEmail("wolool@gmail.com");
@@ -89,9 +87,30 @@ final class BudgetTest extends TestCase
     /**
      * @dataProvider getValidRequestDetails
      */
+    public function testThrowAnExceptionWhenCustomerEmailIsInvalid(array $products, Person $customer): void
+    {
+        $customer->setEmail("woloolgmail.com");
+
+        $request = new BudgetPetitionRequest(
+            PickItClient::SERVICE_TYPE_PICKIT_POINT,
+            PickItClient::WORKFLOW_DISPATCH,
+            PickItClient::OPERATION_TYPE_TO_HOME,
+            $products,
+            PickItClient::SLA_STANDARD,
+            $customer
+        );
+
+        $this->expectException(InvalidArgumentException::class);
+        $this->expectExceptionMessage("Invalid email");
+
+        $this->pickItClient->createBudget($request);
+    }
+
+    /**
+     * @dataProvider getValidRequestDetails
+     */
     public function testThrowAnExceptionWhenSLAIsInvalid(array $products, Person $customer): void
     {
-
         $request = new BudgetPetitionRequest(
             PickItClient::SERVICE_TYPE_PICKIT_POINT,
             PickItClient::WORKFLOW_DISPATCH,
@@ -112,7 +131,6 @@ final class BudgetTest extends TestCase
      */
     public function testThrowAnExceptionWhenServiceTypeIsInvalid(array $products, Person $customer): void
     {
-
         $request = new BudgetPetitionRequest(
             "INVALID_SERVICE_TYPE",
             PickItClient::WORKFLOW_DISPATCH,
@@ -133,7 +151,6 @@ final class BudgetTest extends TestCase
      */
     public function testThrowAnExceptionWhenOperationTypeIsInvalid(array $products, Person $customer): void
     {
-
         $request = new BudgetPetitionRequest(
             PickItClient::SERVICE_TYPE_PICKIT_POINT,
             'INVALID_WORKFLOW',
@@ -154,7 +171,6 @@ final class BudgetTest extends TestCase
      */
     public function testThrowAnExceptionWhenWorkflowIsInvalid(array $products, Person $customer): void
     {
-
         $request = new BudgetPetitionRequest(
             PickItClient::SERVICE_TYPE_PICKIT_POINT,
             PickItClient::WORKFLOW_DISPATCH,

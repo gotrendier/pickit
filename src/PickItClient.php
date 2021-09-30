@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PickIt;
 
 use InvalidArgumentException;
+use PickIt\Entities\Person;
 use PickIt\Entities\Product;
 use PickIt\Exceptions\PickItTimeoutException;
 use PickIt\Exceptions\UnexpectedPickItResponseException;
@@ -286,6 +287,23 @@ class PickItClient
                 throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
             }
         }
+
+        $this->validatePerson($request->getCustomer());
+    }
+
+    private function validatePerson(Person $person): void
+    {
+
+        $requiredFields = [
+            "name" => $person->getName(),
+            "lastName" => $person->getLastName(),
+        ];
+
+        $this->validateRequiredFields($requiredFields);
+
+        if (!filter_var($person->getEmail(), FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException("Invalid email " . $person->getEmail());
+        }
     }
 
     private function validateTransactionRequest(TransactionRequest $request): void
@@ -334,7 +352,6 @@ class PickItClient
             "page" => $page,
             "perPage" => $limit,
         ]);
-
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             throw new UnexpectedPickItResponseException($response);
