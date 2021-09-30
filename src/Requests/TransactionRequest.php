@@ -101,7 +101,7 @@ class TransactionRequest implements \JsonSerializable
         $fields = [
             "firstState" => $this->getFirstState(),
             "packageAmount" => $this->getPackageAmount(),
-            "trackingInfo" => [
+            "trakingInfo" => [ // expected typo...
                 "order" => $this->getOrderTrackingCode()
             ],
         ];

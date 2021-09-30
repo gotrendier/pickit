@@ -147,7 +147,13 @@ class PickItClient
         return new GetLabelResponse($response);
     }
 
-    public function createTransaction(string $uuid, TransactionRequest $request)
+    /**
+     * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/transaction
+     * @param string $uuid
+     * @param TransactionRequest $request
+     * @return CreateBudgetResponse|null
+     */
+    public function createTransaction(string $uuid, TransactionRequest $request): ?StartTransactionResponse
     {
         $this->validateTransactionRequest($request);
 
@@ -156,12 +162,12 @@ class PickItClient
         }
 
         $response = $this->query('/apiV2/transaction/' . $uuid, self::METHOD_POST, $request->jsonSerialize());
-        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
+
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }
 
-        return new CreateBudgetResponse($response);
+        return new StartTransactionResponse($response);
     }
 
     /**
@@ -175,7 +181,6 @@ class PickItClient
 
         $this->validateBudgetPetitionRequest($request);
         $response = $this->query('/apiV2/budget', self::METHOD_POST, $request->jsonSerialize());
-        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
@@ -197,7 +202,7 @@ class PickItClient
         $this->validateTransactionRequest($request->getTransactionRequest());
 
         $response = $this->query('/apiV2/transaction', self::METHOD_POST, $request->jsonSerialize());
-        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
+
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }

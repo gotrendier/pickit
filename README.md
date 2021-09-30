@@ -25,6 +25,56 @@ $pickIt = new \PickIt\PickItClient('API_KEY', 'TOKEN', 'COUNTRY', $sandBox = tru
 $response = $pickIt->getMapPoint(1, 10);
 ```
 
+### Create SimplifiedTransaction
+
+```php
+$products = [
+    new Product("Botines dulces",
+        new Measure(55, Measure::UNIT_G),
+        new Measure(150, Measure::UNIT_CM),
+        new Measure(30, Measure::UNIT_CM),
+        new Measure(30, Measure::UNIT_CM),
+        1
+    )
+];
+
+$customer = (new Person("Marta", "Fernandez"))
+    ->setPid("345345")
+    ->setEmail("edualdo@gmail.com")
+    ->setAddress(new Address(
+        "11320",
+        "LAGO COMO 21",
+        "ciudad de México",
+        "México"
+    ))
+;
+
+$budgetRequest = new BudgetPetitionRequest(PickItClient::SERVICE_TYPE_PICKIT_POINT,
+    PickItClient::WORKFLOW_DISPATCH,
+    PickItClient::OPERATION_TYPE_TO_HOME,
+    $products,
+    PickItClient::SLA_STANDARD,
+    $customer);
+$budgetRequest->setPointId(1086);
+
+$transactionRequest = new TransactionRequest(PickItClient::START_TYPE_RETAILER, "ORDER_ID");
+
+$request = new SimplifiedTransactionRequest($budgetRequest, $transactionRequest);
+
+$response = $pickIt->createSimplifiedTransaction($request);
+```
+
+### Get Label
+
+```php
+$response = $pickIt->getLabel($transactionId = 454352);
+```
+
+### Get Shipment status
+```php
+$response = $pickIt->getShipmentStatus("TRACKING_CODE");
+```
+
 ### Create Budget
 
 ```php
@@ -75,11 +125,6 @@ use \PickIt\Requests\TransactionRequest;
 
 $request = new TransactionRequest(PickIt::START_TYPE_AVAILABLE_FOR_COLLECTION, "ORDER_ID");
 $response = $pickIt->createTransaction("BUDGET_UUID", $request);
-```
-
-### Get Shipment status
-```php
-$response = $pickIt->getShipmentStatus("TRACKING_CODE");
 ```
 
 

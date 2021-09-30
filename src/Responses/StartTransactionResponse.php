@@ -10,6 +10,7 @@ class StartTransactionResponse extends RawResponse
     private string $pickItCode;
     private string $urlTracking;
     private float $price;
+    private ?array $deliveryTimeRange;
 
     public function __construct(RawResponse $rawResponse)
     {
@@ -18,9 +19,10 @@ class StartTransactionResponse extends RawResponse
         $response = $rawResponse->getResponse();
 
         $this->transactionId = $response["transactionId"];
-        $this->pickItCode = $response["pickItCode"];
+        $this->pickItCode = $response["pickitCode"];
         $this->urlTracking = $response["urlTracking"];
         $this->price = $response["price"];
+        $this->deliveryTimeRange = $response["deliveryTimeRange"];
     }
 
     public function getTransactionId(): int
@@ -41,5 +43,10 @@ class StartTransactionResponse extends RawResponse
     public function getPrice(): float
     {
         return $this->price;
+    }
+
+    public function getDeliveryTimeRange(): array
+    {
+        return $this->deliveryTimeRange;
     }
 }
