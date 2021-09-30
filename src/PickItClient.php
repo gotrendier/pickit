@@ -227,7 +227,11 @@ class PickItClient
             self::SERVICE_TYPE_STOCK,
             ]) && empty($request->getPointId())
         ) {
-            throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
+            if ($request->getOperationType() == self::OPERATION_TYPE_TO_HOME) {
+                $request->setPointId(0); // seems like it's not nullable yet it's not being used when delivering home
+            } else {
+                throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
+            }
         }
 
         $this->validateRequiredFields($requiredFields);
