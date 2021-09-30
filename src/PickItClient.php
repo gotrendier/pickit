@@ -16,7 +16,7 @@ use PickIt\Responses\GetShipmentStatusResponse;
 use PickIt\Responses\RawResponse;
 use PickIt\Responses\StartTransactionResponse;
 
-class PickIt
+class PickItClient
 {
     public const SERVICE_TYPE_STORE_PICKUP = 'SP';
     public const SERVICE_TYPE_PICKIT_POINT = 'PP';
@@ -156,7 +156,7 @@ class PickIt
         }
 
         $response = $this->query('/apiV2/transaction/' . $uuid, self::METHOD_POST, $request->jsonSerialize());
-        pd($request, $response->getRawResponse());
+        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }
@@ -195,9 +195,9 @@ class PickIt
 
         $this->validateBudgetPetitionRequest($request->getBudgetPetitionRequest());
         $this->validateTransactionRequest($request->getTransactionRequest());
-//pd(json_encode($request, JSON_PRETTY_PRINT));
+
         $response = $this->query('/apiV2/transaction', self::METHOD_POST, $request->jsonSerialize());
-        pd($response->getRawResponse());
+        pd(json_encode($request, JSON_PRETTY_PRINT), $response->getRawResponse());
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
             return null;
         }
