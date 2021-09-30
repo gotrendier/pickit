@@ -31,10 +31,10 @@ class GetLabelResponse extends RawResponse
 
         $response = $rawResponse->getResponse();
 
-        $this->customer = new Person($response["customer"]["name"], $response["customer"]["lastname"]);
+        $this->customer = new Person($response["customer"]["name"], $response["customer"]["lastName"]);
         $this->barcode = $response["barcode"];
         $this->pickItPoint = new MapPoint(
-            $response["pickitPoint"]["id"],
+            empty($response["pickitPoint"]["id"]) ? 0 : $response["pickitPoint"]["id"],
             0,
             "",
             "",
@@ -49,17 +49,20 @@ class GetLabelResponse extends RawResponse
         $this->retailer = new Retailer(
             $response["retailer"]["name"],
             $response["retailer"]["responsable"],
-            $response["retailer"]["address"]
+            $response["retailer"]["address"],
+            $response["retailer"]["postalCode"],
+            $response["retailer"]["city"],
+            $response["retailer"]["province"],
         );
 
         $this->date = new DateTime($response["date"]);
-        $this->pickItCode = $response["pickItCode"];
+        $this->pickItCode = $response["pickitCode"];
         $this->shipmentId = $response["shipmentID"];
         $this->operationType = $response["operationType"];
         $this->canalization = $response["canalization"];
         $this->serviceId = $response["serviceId"];
         $this->order = $response["trackinginfo"]["order"];
-        $this->barcodeUrl = $response["url"]["order"];
+        $this->barcodeUrl = $response["url"]["barCode"];
         $this->labelsUrls = $response["url"]["label"];
     }
 
