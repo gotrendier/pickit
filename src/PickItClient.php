@@ -6,6 +6,8 @@ namespace PickIt;
 
 use InvalidArgumentException;
 use PickIt\Entities\Product;
+use PickIt\Exceptions\PickItTimeoutException;
+use PickIt\Exceptions\UnexpectedPickItResponseException;
 use PickIt\Requests\BudgetPetitionRequest;
 use PickIt\Requests\SimplifiedTransactionRequest;
 use PickIt\Requests\TransactionRequest;
@@ -47,6 +49,8 @@ class PickItClient
     private const METHOD_POST = 'post';
     private const METHOD_PUT = 'put';
     private const METHOD_PATCH = 'patch';
+
+    private const TIMEOUT_LIMIT = 30;
 
     private const HTTP_STATUS_OK = 200;
 
@@ -121,12 +125,12 @@ class PickItClient
         return $url;
     }
 
-    public function getShipmentStatus(string $trackingCode): ?GetShipmentStatusResponse
+    public function getShipmentStatus(string $trackingCode): GetShipmentStatusResponse
     {
         $response = $this->query('/publicApiV2/tracking/base/' . $trackingCode, self::METHOD_GET);
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
         return new GetShipmentStatusResponse($response);
     }
@@ -134,26 +138,29 @@ class PickItClient
     /**
      * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/transaction/{transactionId}/label
      * @param int $transactionId
-     * @return GetLabelResponse|null
+     * @return GetLabelResponse
+     * @throws UnexpectedPickItResponseException
      */
-    public function getLabel(int $transactionId): ?GetLabelResponse
+    public function getLabel(int $transactionId): GetLabelResponse
     {
         $response = $this->query('/apiV2/transaction/' . $transactionId . '/label', self::METHOD_GET);
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
 
         return new GetLabelResponse($response);
     }
 
+
     /**
      * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/transaction
      * @param string $uuid
      * @param TransactionRequest $request
-     * @return CreateBudgetResponse|null
+     * @return StartTransactionResponse
+     * @throws UnexpectedPickItResponseException
      */
-    public function createTransaction(string $uuid, TransactionRequest $request): ?StartTransactionResponse
+    public function createTransaction(string $uuid, TransactionRequest $request): StartTransactionResponse
     {
         $this->validateTransactionRequest($request);
 
@@ -164,7 +171,7 @@ class PickItClient
         $response = $this->query('/apiV2/transaction/' . $uuid, self::METHOD_POST, $request->jsonSerialize());
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
 
         return new StartTransactionResponse($response);
@@ -173,9 +180,10 @@ class PickItClient
     /**
      * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/budget
      * @param BudgetPetitionRequest $request
-     * @return CreateBudgetResponse|null
+     * @return CreateBudgetResponse
+     * @throws UnexpectedPickItResponseException
      */
-    public function createBudget(BudgetPetitionRequest $request): ?CreateBudgetResponse
+    public function createBudget(BudgetPetitionRequest $request): CreateBudgetResponse
     {
         $request->setTokenId($this->token);
 
@@ -183,7 +191,7 @@ class PickItClient
         $response = $this->query('/apiV2/budget', self::METHOD_POST, $request->jsonSerialize());
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
 
         return new CreateBudgetResponse($response);
@@ -192,9 +200,10 @@ class PickItClient
     /**
      * @url https://dev.pickit.net/Metodos.html#Met_POST/apiV2/transaction
      * @param SimplifiedTransactionRequest $request
-     * @return StartTransactionResponse|null
+     * @return StartTransactionResponse
+     * @throws UnexpectedPickItResponseException
      */
-    public function createSimplifiedTransaction(SimplifiedTransactionRequest $request): ?StartTransactionResponse
+    public function createSimplifiedTransaction(SimplifiedTransactionRequest $request): StartTransactionResponse
     {
         $request->getBudgetPetitionRequest()->setTokenId($this->token);
 
@@ -204,7 +213,7 @@ class PickItClient
         $response = $this->query('/apiV2/transaction', self::METHOD_POST, $request->jsonSerialize());
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
 
         return new StartTransactionResponse($response);
@@ -398,6 +407,7 @@ class PickItClient
             $headerList[] = $k . ": " . $v;
         }
 
+        curl_setopt($ch, CURLOPT_TIMEOUT, self::TIMEOUT_LIMIT);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headerList);
         curl_setopt($ch, CURLOPT_ENCODING, '');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -406,6 +416,17 @@ class PickItClient
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_URL, $url);
         $result = curl_exec($ch);
+
+        if (!$result) {
+            $errorNumber = curl_errno($ch);
+
+            switch ($errorNumber) {
+                case CURLE_OPERATION_TIMEOUTED:
+                    throw new PickItTimeoutException();
+                default:
+                    throw new UnexpectedPickItResponseException();
+            }
+        }
 
         return new RawResponse($result, $this->lastRequestHeaders);
     }
