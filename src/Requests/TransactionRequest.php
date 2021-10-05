@@ -107,7 +107,7 @@ class TransactionRequest implements \JsonSerializable
         ];
 
         if (!empty($this->getShipmentTrackingCode())) {
-            $fields["trackingInfo"]["shipment"] = $this->getShipmentTrackingCode();
+            $fields["trakingInfo"]["shipment"] = $this->getShipmentTrackingCode();
         }
 
         if (!empty($this->getStartTime())) {

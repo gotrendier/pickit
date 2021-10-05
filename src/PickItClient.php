@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PickIt;
 
 use InvalidArgumentException;
+use PickIt\Entities\Person;
 use PickIt\Entities\Product;
 use PickIt\Exceptions\PickItTimeoutException;
 use PickIt\Exceptions\UnexpectedPickItResponseException;
@@ -54,31 +55,39 @@ class PickItClient
 
     private const HTTP_STATUS_OK = 200;
 
-    private const VALID_SERVICE_TYPES = [
+    private const SERVICE_TYPES = [
         self::SERVICE_TYPE_STORE_PICKUP,
         self::SERVICE_TYPE_PICKIT_POINT,
         self::SERVICE_TYPE_LOCKER,
         self::SERVICE_TYPE_STOCK
     ];
 
-    private const VALID_OPERATION_TYPES = [
+    private const OPERATION_TYPES = [
         self::OPERATION_TYPE_TO_POINT,
         self::OPERATION_TYPE_TO_HOME,
         self::OPERATION_TYPE_TO_RETAILER
     ];
 
-    private const VALID_WORKFLOWS = [
+    private const WORKFLOWS = [
         self::WORKFLOW_DISPATCH,
         self::WORKFLOW_REFUND,
         self::WORKFLOW_RESTOCKING,
     ];
 
-    private const VALID_SLAS = [
+    private const SLAS = [
         self::SLA_STANDARD,
         self::SLA_EXPRESS,
         self::SLA_PRIORITY,
         self::SLA_AGREED_WITH_CLIENT,
         self::SLA_WAREHOUSE
+    ];
+
+    private const START_TYPES = [
+        self::START_TYPE_RETAILER,
+        self::START_TYPE_AVAILABLE_FOR_COLLECTION,
+        self::START_TYPE_COURIER,
+        self::START_TYPE_REQUESTED_DEVOLUTION,
+        self::START_TYPE_PROGRAMMED_DEVOLUTION,
     ];
 
     private const COUNTRY_DOMAINS = [
@@ -123,6 +132,11 @@ class PickItClient
         $url .= is_array(self::COUNTRY_DOMAINS[$this->country]) ? self::COUNTRY_DOMAINS[$this->country][$this->sandBox ? 'sandbox' : 'production'] : self::COUNTRY_DOMAINS[$this->country];
 
         return $url;
+    }
+
+    public function getDomain(): string
+    {
+        return $this->domain;
     }
 
     public function getShipmentStatus(string $trackingCode): GetShipmentStatusResponse
@@ -229,20 +243,6 @@ class PickItClient
             "customer" => $request->getCustomer(),
         ];
 
-        if (
-            in_array($request->getServiceType(), [
-            self::SERVICE_TYPE_PICKIT_POINT,
-            self::SERVICE_TYPE_LOCKER,
-            self::SERVICE_TYPE_STOCK,
-            ]) && empty($request->getPointId())
-        ) {
-            if ($request->getOperationType() == self::OPERATION_TYPE_TO_HOME) {
-                $request->setPointId(0); // seems like it's not nullable yet it's not being used when delivering home
-            } else {
-                throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
-            }
-        }
-
         $this->validateRequiredFields($requiredFields);
 
         foreach ($request->getProducts() as $product) {
@@ -258,20 +258,51 @@ class PickItClient
             throw new InvalidArgumentException("Customer address is required when delivering home");
         }
 
-        if (!in_array($request->getOperationType(), self::VALID_OPERATION_TYPES)) {
+        if (!in_array($request->getOperationType(), self::OPERATION_TYPES)) {
             throw new InvalidArgumentException("Invalid operationType received " . $request->getOperationType());
         }
 
-        if (!in_array($request->getSlaId(), self::VALID_SLAS)) {
+        if (!in_array($request->getSlaId(), self::SLAS)) {
             throw new InvalidArgumentException("Invalid SLA received " . $request->getSlaId());
         }
 
-        if (!in_array($request->getWorkflowTag(), self::VALID_WORKFLOWS)) {
+        if (!in_array($request->getWorkflowTag(), self::WORKFLOWS)) {
             throw new InvalidArgumentException("Invalid workflow received " . $request->getWorkflowTag());
         }
 
-        if (!in_array($request->getServiceType(), self::VALID_SERVICE_TYPES)) {
+        if (!in_array($request->getServiceType(), self::SERVICE_TYPES)) {
             throw new InvalidArgumentException("Invalid serviceType received " . $request->getServiceType());
+        }
+
+        if (
+            in_array($request->getServiceType(), [
+                self::SERVICE_TYPE_PICKIT_POINT,
+                self::SERVICE_TYPE_LOCKER,
+                self::SERVICE_TYPE_STOCK,
+            ]) && empty($request->getPointId())
+        ) {
+            if ($request->getOperationType() == self::OPERATION_TYPE_TO_HOME) {
+                $request->setPointId(0); // seems like it's not nullable yet it's not being used when delivering home
+            } else {
+                throw new InvalidArgumentException("PointId is mandatory for service type " . $request->getServiceType());
+            }
+        }
+
+        $this->validatePerson($request->getCustomer());
+    }
+
+    private function validatePerson(Person $person): void
+    {
+
+        $requiredFields = [
+            "name" => $person->getName(),
+            "lastName" => $person->getLastName(),
+        ];
+
+        $this->validateRequiredFields($requiredFields);
+
+        if (!filter_var($person->getEmail(), FILTER_VALIDATE_EMAIL)) {
+            throw new InvalidArgumentException("Invalid email " . $person->getEmail());
         }
     }
 
@@ -293,6 +324,10 @@ class PickItClient
         }
 
         $this->validateRequiredFields($requiredFields);
+
+        if (!in_array($request->getFirstState(), self::START_TYPES)) {
+            throw new InvalidArgumentException("Invalid firstState received " . $request->getFirstState());
+        }
     }
 
     private function validateRequiredFields(array $requiredFields): void
@@ -308,18 +343,18 @@ class PickItClient
      * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/map/point?page={page_number}&perPage={results_per_page}
      * @param int $page
      * @param int $limit
-     * @return GetMapPointResponse|null
+     * @return GetMapPointResponse
+     * @throws UnexpectedPickItResponseException
      */
-    public function getMapPoint(int $page, int $limit): ?GetMapPointResponse
+    public function getMapPoint(int $page, int $limit): GetMapPointResponse
     {
         $response = $this->query('/apiV2/map/point', self::METHOD_GET, [
             "page" => $page,
             "perPage" => $limit,
         ]);
 
-
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
-            return null;
+            throw new UnexpectedPickItResponseException($response);
         }
 
         return new GetMapPointResponse($response);
