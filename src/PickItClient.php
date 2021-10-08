@@ -18,6 +18,7 @@ use PickIt\Responses\GetMapPointResponse;
 use PickIt\Responses\GetShipmentStatusResponse;
 use PickIt\Responses\RawResponse;
 use PickIt\Responses\StartTransactionResponse;
+use PickIt\Responses\WebhookResponse;
 
 class PickItClient
 {
@@ -169,6 +170,39 @@ class PickItClient
             throw new UnexpectedPickItResponseException($response);
         }
         return new GetShipmentStatusResponse($response);
+    }
+
+    /**
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @return WebhookResponse
+     * @throws UnexpectedPickItResponseException
+     */
+    public function getWebhookNotification(): WebhookResponse
+    {
+        $rawBody = file_get_contents('php://input');
+        $rawRequest = new RawResponse($rawBody, $_SERVER);
+
+        if (empty($rawBody)) {
+            throw new UnexpectedPickItResponseException($rawRequest);
+        }
+
+        $body = json_decode($rawBody, true);
+
+        if (empty($body)) {
+            throw new UnexpectedPickItResponseException($rawRequest);
+        }
+
+        try {
+            return new WebhookResponse(
+                $body["token"],
+                $body["pickitCode"],
+                $body["state"],
+                $body["order"],
+                $body["points"],
+            );
+        } catch (\Exception $e) {
+            throw new UnexpectedPickItResponseException($rawRequest);
+        }
     }
 
     /**
