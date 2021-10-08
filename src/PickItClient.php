@@ -150,27 +150,37 @@ class PickItClient
         return new GetShipmentStatusResponse($response);
     }
 
+    /**
+     * @SuppressWarnings(PHPMD.Superglobals)
+     * @return WebhookResponse
+     * @throws UnexpectedPickItResponseException
+     */
     public function getWebhookNotification(): WebhookResponse
     {
-        $body = file_get_contents('php://input');
+        $rawBody = file_get_contents('php://input');
+        $rawRequest = new RawResponse($rawBody, $_SERVER);
 
-        if (empty($body)) {
-            throw new InvalidArgumentException("missing body");
+        if (empty($rawBody)) {
+            throw new UnexpectedPickItResponseException($rawRequest);
         }
 
-        $body = json_decode($body, true);
+        $body = json_decode($rawBody, true);
 
         if (empty($body)) {
-            throw new InvalidArgumentException("missing body");
+            throw new UnexpectedPickItResponseException($rawRequest);
         }
 
-        return new WebhookResponse(
-            $body["token"],
-            $body["pickitCode"],
-            $body["state"],
-            $body["order"],
-            $body["points"],
-        );
+        try {
+            return new WebhookResponse(
+                $body["token"],
+                $body["pickitCode"],
+                $body["state"],
+                $body["order"],
+                $body["points"],
+            );
+        } catch (\Exception $e) {
+            throw new UnexpectedPickItResponseException($rawRequest);
+        }
     }
 
     /**
