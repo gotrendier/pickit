@@ -104,6 +104,11 @@ class PickItClient
     private const API_HOST = "https://api.pickit.";
     private const API_SANDBOX_HOST = "https://api.uat.pickit.";
 
+    private const TRACKING_HOST = "https://tracking.pickit.";
+    private const TRACKING_SANDBOX_HOST = "https://tracking.uat.pickit.";
+
+    private const URL_TYPE_TRACKING = 'tracking';
+
     private string $apiKey;
     private string $token;
     private string $country;
@@ -126,10 +131,17 @@ class PickItClient
         $this->domain = $this->buildDomain();
     }
 
-    private function buildDomain(): string
+    private function buildDomain(string $type = null): string
     {
-        $url = $this->sandBox ? self::API_SANDBOX_HOST : self::API_HOST;
-        $url .= is_array(self::COUNTRY_DOMAINS[$this->country]) ? self::COUNTRY_DOMAINS[$this->country][$this->sandBox ? 'sandbox' : 'production'] : self::COUNTRY_DOMAINS[$this->country];
+        if ($type == self::URL_TYPE_TRACKING) {
+            $url = $this->sandBox ? self::TRACKING_SANDBOX_HOST : self::TRACKING_HOST;
+        } else {
+            $url = $this->sandBox ? self::API_SANDBOX_HOST : self::API_HOST;
+        }
+
+        $url .= is_array(self::COUNTRY_DOMAINS[$this->country]) ?
+            self::COUNTRY_DOMAINS[$this->country][$this->sandBox ? 'sandbox' : 'production'] :
+            self::COUNTRY_DOMAINS[$this->country];
 
         return $url;
     }
@@ -137,6 +149,16 @@ class PickItClient
     public function getDomain(): string
     {
         return $this->domain;
+    }
+
+    /**
+     * Returns the url to track a shipment in PickIt's website
+     * @param string $trackingCode
+     * @return string
+     */
+    public function getTrackingUrl(string $trackingCode): string
+    {
+        return $this->buildDomain(self::URL_TYPE_TRACKING) . '?code=' . $trackingCode;
     }
 
     public function getShipmentStatus(string $trackingCode): GetShipmentStatusResponse
