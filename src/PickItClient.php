@@ -159,7 +159,7 @@ class PickItClient
      */
     public function getTrackingUrl(string $trackingCode): string
     {
-        return $this->buildDomain(self::URL_TYPE_TRACKING) . '?code=' . $trackingCode;
+        return $this->buildDomain(self::URL_TYPE_TRACKING) . '/' . $trackingCode;
     }
 
     public function getShipmentStatus(string $trackingCode): GetShipmentStatusResponse
