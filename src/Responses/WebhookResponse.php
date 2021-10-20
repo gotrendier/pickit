@@ -50,4 +50,46 @@ class WebhookResponse
     {
         return $this->points;
     }
+
+    public function isStateInPreparation(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'inRetailer';
+    }
+
+    public function isStateReadyToBeDispatched(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'courier'
+            && is_null($this->state['subState']);
+    }
+
+    public function isStateOnRoute(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        if (!isset($this->state['subState']['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'courier'
+            && $this->state['subState']['tag'] === 'free';
+    }
+
+    public function isStateDelivered(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'delivered';
+    }
 }
