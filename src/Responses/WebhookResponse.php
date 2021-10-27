@@ -76,6 +76,15 @@ class WebhookResponse
             return false;
         }
 
+        return $this->state['tag'] === 'courier';
+    }
+
+    public function canBePicked(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
         if (!isset($this->state['subState']['tag'])) {
             return false;
         }
