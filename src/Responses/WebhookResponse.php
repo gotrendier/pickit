@@ -85,12 +85,7 @@ class WebhookResponse
             return false;
         }
 
-        if (!isset($this->state['subState']['tag'])) {
-            return false;
-        }
-
-        return $this->state['tag'] === 'courier'
-            && $this->state['subState']['tag'] === 'free';
+        return $this->state['tag'] === 'inPikcitPoint';
     }
 
     public function isStateDelivered(): bool
