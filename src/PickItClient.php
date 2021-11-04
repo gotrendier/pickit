@@ -180,28 +180,22 @@ class PickItClient
     public function getWebhookNotification(): WebhookResponse
     {
         $rawBody = file_get_contents('php://input');
-        $rawRequest = new RawResponse($rawBody, $_SERVER);
+        $rawResponse = new RawResponse($rawBody, $_SERVER);
 
         if (empty($rawBody)) {
-            throw new UnexpectedPickItResponseException($rawRequest);
+            throw new UnexpectedPickItResponseException($rawResponse);
         }
 
         $body = json_decode($rawBody, true);
 
         if (empty($body)) {
-            throw new UnexpectedPickItResponseException($rawRequest);
+            throw new UnexpectedPickItResponseException($rawResponse);
         }
 
         try {
-            return new WebhookResponse(
-                $body["token"],
-                $body["pickitCode"],
-                $body["state"],
-                $body["order"],
-                $body["points"],
-            );
+            return new WebhookResponse($rawResponse);
         } catch (\Exception $e) {
-            throw new UnexpectedPickItResponseException($rawRequest);
+            throw new UnexpectedPickItResponseException($rawResponse);
         }
     }
 

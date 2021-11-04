@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace PickIt\Responses;
 
-class WebhookResponse
+class WebhookResponse extends RawResponse
 {
     private string $token;
     private string $pickItCode;
@@ -13,17 +13,17 @@ class WebhookResponse
     private array $points;
 
     public function __construct(
-        string $token,
-        string $pickItCode,
-        array $state,
-        string $order,
-        array $points
+        RawResponse $rawResponse
     ) {
-        $this->token = $token;
-        $this->pickItCode = $pickItCode;
-        $this->state = $state;
-        $this->order = $order;
-        $this->points = $points;
+        parent::__construct($rawResponse->getRawResponse(), []);
+
+        $response = $rawResponse->getResponse();
+
+        $this->token = $response["token"];
+        $this->pickItCode = $response["pickitCode"];
+        $this->state = $response["state"];
+        $this->order = $response["order"];
+        $this->points = $response["points"];
     }
 
     public function getToken(): string
@@ -79,7 +79,7 @@ class WebhookResponse
         return $this->state['tag'] === 'courier';
     }
 
-    public function canBePicked(): bool
+    public function isReadyToBePicked(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
