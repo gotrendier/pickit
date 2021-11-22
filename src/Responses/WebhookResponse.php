@@ -57,7 +57,7 @@ class WebhookResponse extends RawResponse
             return false;
         }
 
-        return $this->state['tag'] === 'inRetailer';
+        return $this->state['tag'] === 'inDropOffPoint';
     }
 
     public function isStateReadyToBeDispatched(): bool
