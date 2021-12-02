@@ -51,6 +51,7 @@ class PickItClient
     private const METHOD_POST = 'post';
     private const METHOD_PUT = 'put';
     private const METHOD_PATCH = 'patch';
+    private const METHOD_DELETE = 'delete';
 
     private const TIMEOUT_LIMIT = 30;
 
@@ -170,6 +171,16 @@ class PickItClient
             throw new UnexpectedPickItResponseException($response);
         }
         return new GetShipmentStatusResponse($response);
+    }
+
+    public function cancelTransaction(int $transactionId): bool
+    {
+        $response = $this->query('/apiV2/retailer/transaction/' . $transactionId, self::METHOD_DELETE);
+
+        if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
+            throw new UnexpectedPickItResponseException($response);
+        }
+        return true;
     }
 
     /**
@@ -446,6 +457,7 @@ class PickItClient
                 }
                 break;
             case self::METHOD_PUT:
+            case self::METHOD_DELETE:
                 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, strtoupper($method));
                 if (sizeof($data) > 0) {
                     curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
@@ -471,8 +483,8 @@ class PickItClient
             function ($curl, $header) {
                 $len = strlen($header);
 
-                if (strpos($header, "HTTP/1.1 ") !== false) {
-                    $this->lastRequestHeaders["status"] = (int)explode("HTTP/1.1 ", $header)[1];
+                if (strpos($header, "HTTP") !== false) {
+                    $this->lastRequestHeaders["status"] = (int)explode(" ", $header)[1];
                 }
 
                 $header = explode(':', $header, 2);
