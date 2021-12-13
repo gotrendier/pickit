@@ -96,4 +96,18 @@ class WebhookResponse extends RawResponse
 
         return $this->state['tag'] === 'delivered';
     }
+
+    public function isStateAvailableForCollect(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        if (!isset($this->state['subState']['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'point'
+            && $this->state['subState']['tag'] === 'availableForCollect';
+    }
 }
