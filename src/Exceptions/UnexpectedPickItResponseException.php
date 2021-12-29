@@ -13,7 +13,7 @@ class UnexpectedPickItResponseException extends \Exception
 
     public function __construct(?RawResponse $response = null)
     {
-        parent::__construct("Request failed");
+        parent::__construct("Request failed " . (!empty($response) ? $response->getRawResponse() : ""));
         $this->response = $response;
     }
 
