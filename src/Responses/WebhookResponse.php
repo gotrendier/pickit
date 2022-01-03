@@ -85,7 +85,7 @@ class WebhookResponse extends RawResponse
             return false;
         }
 
-        return $this->state['tag'] === 'inPikcitPoint';
+        return in_array($this->state['tag'], ['inPikcitPoint', 'inPickitPoint']);
     }
 
     public function isStateDelivered(): bool
