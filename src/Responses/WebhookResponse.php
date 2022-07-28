@@ -111,12 +111,12 @@ class WebhookResponse extends RawResponse
             && $this->state['subState']['tag'] === 'availableForCollect';
     }
 
-    public function isStateExpired(): bool
+    public function isStateDeliveredToOrigin(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
         }
 
-        return $this->state['tag'] === 'expired'; //test
+        return $this->state['tag'] === 'ended';
     }
 }
