@@ -401,17 +401,16 @@ class PickItClient
     }
 
     /**
-     * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/map/point?page={page_number}&perPage={results_per_page}
-     * @param int $page
-     * @param int $limit
+     * @url https://dev.pickit.net/Metodos.html#Met_GET/apiV2/point?paginable=false&filter.hours=true&filter.retailer.tokenId={token}
      * @return GetMapPointResponse
      * @throws UnexpectedPickItResponseException
      */
-    public function getMapPoint(int $page, int $limit): GetMapPointResponse
+    public function getMapPoints(): GetMapPointResponse
     {
-        $response = $this->query('/apiV2/map/point', self::METHOD_GET, [
-            "page" => $page,
-            "perPage" => $limit,
+        $response = $this->query('/apiV2/point', self::METHOD_GET, [
+            "paginable" => 'false',
+            'filter.hours' => 'true',
+            'filter.retailer.tokenId' => $this->token
         ]);
 
         if (empty($response) || $response->getHeaders()["status"] != self::HTTP_STATUS_OK) {
