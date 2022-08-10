@@ -35,14 +35,13 @@ class GetLabelResponse extends RawResponse
         $this->barcode = $response["barcode"];
         $this->pickItPoint = new MapPoint(
             empty($response["pickitPoint"]["id"]) ? 0 : $response["pickitPoint"]["id"],
-            0,
-            "",
             "",
             0,
             0,
             $response["pickitPoint"]["address"],
             "",
-            "",
+            true,
+            true,
             ""
         );
 
