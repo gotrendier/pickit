@@ -28,8 +28,11 @@ class GetMapPointResponse extends RawResponse
 
         $response = $rawResponse->getResponse();
         foreach ($response["result"] as $point) {
+            if(!array_key_exists('pickitPoint', $point)) {
+                continue;
+            }
             $this->points[] = new MapPoint(
-                $point["id"],
+                $point["pickitPoint"]["id"],
                 $point["name"],
                 $point["latitud"],
                 $point["longitud"],
