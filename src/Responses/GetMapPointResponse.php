@@ -27,20 +27,20 @@ class GetMapPointResponse extends RawResponse
         parent::__construct($rawResponse->getRawResponse(), $rawResponse->getHeaders());
 
         $response = $rawResponse->getResponse();
-        foreach ($response["result"] as $point) {
-            if(!array_key_exists('pickitPoint', $point)) {
+        foreach ($response['result'] as $point) {
+            if(!isset($point['pickitPoint']['id'])) {
                 continue;
             }
             $this->points[] = new MapPoint(
-                $point["pickitPoint"]["id"],
-                $point["name"],
-                $point["latitud"],
-                $point["longitud"],
-                $point["direccion"],
-                $point["codigoPostal"],
-                array_key_exists('dropoff', $point),
-                array_key_exists('pickitPoint', $point) && 1 === $point["pickitPoint"]["estado"],
-                $this->weeklyScheduleArrayToString($point["pointBaseOpeningHours"])
+                $point['pickitPoint']['id'],
+                $point['name'],
+                $point['latitud'],
+                $point['longitud'],
+                $point['direccion'],
+                $point['codigoPostal'],
+                isset($point['dropoff']),
+                isset($point['pickitPoint']['estado']) && 1 === $point['pickitPoint']['estado'],
+                $this->weeklyScheduleArrayToString($point['pointBaseOpeningHours'])
             );
         }
     }
