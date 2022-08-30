@@ -28,7 +28,7 @@ class GetMapPointResponse extends RawResponse
 
         $response = $rawResponse->getResponse();
         foreach ($response['result'] as $point) {
-            if(!isset($point['pickitPoint']['id'])) {
+            if(!$this->isPointValid($point)) {
                 continue;
             }
             $this->points[] = new MapPoint(
@@ -43,6 +43,31 @@ class GetMapPointResponse extends RawResponse
                 $this->weeklyScheduleArrayToString($point['pointBaseOpeningHours'])
             );
         }
+    }
+
+    private function isPointValid(array $point): bool
+    {
+        $requiredFields = [
+            'pickitPoint',
+            'name',
+            'latitud',
+            'longitud',
+            'direccion',
+            'codigoPostal',
+            'pointBaseOpeningHours'
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (!isset($point[$field])) {
+                return false;
+            }
+        }
+
+        if (!isset($point['pickitPoint']['id'])) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getPoints(): array
