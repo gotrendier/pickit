@@ -27,22 +27,47 @@ class GetMapPointResponse extends RawResponse
         parent::__construct($rawResponse->getRawResponse(), $rawResponse->getHeaders());
 
         $response = $rawResponse->getResponse();
-        foreach ($response["result"] as $point) {
-            if(!array_key_exists('pickitPoint', $point)) {
+        foreach ($response['result'] as $point) {
+            if(!$this->isPointValid($point)) {
                 continue;
             }
             $this->points[] = new MapPoint(
-                $point["pickitPoint"]["id"],
-                $point["name"],
-                $point["latitud"],
-                $point["longitud"],
-                $point["direccion"],
-                $point["codigoPostal"],
-                array_key_exists('dropoff', $point),
-                array_key_exists('pickitPoint', $point) && 1 === $point["pickitPoint"]["estado"],
-                $this->weeklyScheduleArrayToString($point["pointBaseOpeningHours"])
+                $point['pickitPoint']['id'],
+                $point['name'],
+                $point['latitud'],
+                $point['longitud'],
+                $point['direccion'],
+                $point['codigoPostal'],
+                isset($point['dropoff']),
+                isset($point['pickitPoint']['estado']) && 1 === $point['pickitPoint']['estado'],
+                $this->weeklyScheduleArrayToString($point['pointBaseOpeningHours'])
             );
         }
+    }
+
+    private function isPointValid(array $point): bool
+    {
+        $requiredFields = [
+            'pickitPoint',
+            'name',
+            'latitud',
+            'longitud',
+            'direccion',
+            'codigoPostal',
+            'pointBaseOpeningHours'
+        ];
+
+        foreach ($requiredFields as $field) {
+            if (!isset($point[$field])) {
+                return false;
+            }
+        }
+
+        if (!isset($point['pickitPoint']['id'])) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getPoints(): array
