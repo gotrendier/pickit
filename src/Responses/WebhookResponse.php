@@ -128,4 +128,13 @@ class WebhookResponse extends RawResponse
 
         return $this->state['tag'] === 'ended';
     }
+
+    public function isStateInOriginOffice(): bool
+    {
+        if (!isset($this->state['tag'])) {
+            return false;
+        }
+
+        return $this->state['tag'] === 'availableForCollect';
+    }
 }
