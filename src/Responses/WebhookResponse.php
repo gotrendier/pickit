@@ -97,7 +97,7 @@ class WebhookResponse extends RawResponse
         return $this->state['tag'] === 'delivered';
     }
 
-    public function isStateAvailableForCollect(): bool
+    public function isStatePointAvailableForCollect(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
@@ -107,7 +107,7 @@ class WebhookResponse extends RawResponse
             return false;
         }
 
-        return in_array($this->state['tag'], ['inDropOffPoint', 'point'])
+        return $this->state['tag'] === 'point'
             && $this->state['subState']['tag'] === 'availableForCollect';
     }
 
@@ -120,7 +120,7 @@ class WebhookResponse extends RawResponse
         return $this->state['tag'] === 'expired';
     }
 
-    public function isStateDeliveredToOrigin(): bool
+    public function isStateEnded(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
@@ -129,7 +129,7 @@ class WebhookResponse extends RawResponse
         return $this->state['tag'] === 'ended';
     }
 
-    public function isStateInOriginOffice(): bool
+    public function isStateAvailableForCollect(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
@@ -161,7 +161,7 @@ class WebhookResponse extends RawResponse
             && $this->state['subState']['tag'] === 'refundRetailer';
     }
 
-    public function isStateReturnedToSenderRetailer(): bool
+    public function isStateAvailableForCollectOrigin(): bool
     {
         if (!isset($this->state['tag'])) {
             return false;
@@ -171,8 +171,8 @@ class WebhookResponse extends RawResponse
             return false;
         }
 
-        return $this->state['tag'] === 'returnedToSender'
-            && $this->state['subState']['tag'] === 'returnedToSenderRetailer ';
+        return $this->state['tag'] === 'inDropOffPoint'
+            && $this->state['subState']['tag'] === 'availableForCollect';
     }
 
     public function isStateReturnedToSender(): bool
