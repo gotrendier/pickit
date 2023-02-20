@@ -48,9 +48,9 @@ class BudgetPetitionRequest implements \JsonSerializable
         return $this;
     }
 
-    public function setPointId(int $pointId): self
+    public function setPointId(string $pointId): self
     {
-        $this->pointId = $pointId;
+        $this->pointId = (int)$pointId;
         return $this;
     }
 

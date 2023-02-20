@@ -55,7 +55,7 @@ $budgetRequest = new BudgetPetitionRequest(PickItClient::SERVICE_TYPE_PICKIT_POI
     $products,
     PickItClient::SLA_STANDARD,
     $customer);
-$budgetRequest->setPointId(1086);
+$budgetRequest->setPointId('1086');
 
 $transactionRequest = new TransactionRequest(PickItClient::START_TYPE_RETAILER, "ORDER_ID");
 
@@ -112,7 +112,7 @@ $products = [
         $products,
         PickIt::SLA_STANDARD,
         $customer);
-    $request->setPointId(1086);
+    $request->setPointId('1086');
 
     $response = $pickIt->createBudget($request);
 ```
