@@ -135,7 +135,7 @@ class WebhookResponse extends RawResponse
             return false;
         }
 
-        return $this->state['tag'] === 'availableForCollect';
+        return $this->state['tag'] === 'availableForCollectDOPoint';
     }
 
     public function isStateReturnToSender(): bool
@@ -172,7 +172,7 @@ class WebhookResponse extends RawResponse
         }
 
         return $this->state['tag'] === 'inDropOffPoint'
-            && $this->state['subState']['tag'] === 'availableForCollect';
+            && $this->state['subState']['tag'] === 'availableForCollectDOPoint';
     }
 
     public function isStateReturnedToSender(): bool
